@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        th{
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div id="window" style="width: 500px; height: 400px; background-color: black; display: grid; grid-template-rows: 1fr 14fr; border-style: solid; border-width: 2px; grid-gap: 2px; border-radius: 10px;">
+        <div style="width: 100%; height: 100%; background-color: lightsteelblue; grid-template-rows: 1fr 9fr; border-radius: 10px 10px 0 0;">
+            <p id="header" style="text-align: center;">Criteria</p>
+        </div>
+        <div id="content" style="width: 100%; height: 100%; background-color: lightpink; grid-template-rows: 1fr 9fr; border-radius: 0 0 10px 10px; overflow: auto;">
+            <div style="position: relative; margin: 5px;">
+                
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script>
+    let experts = []
+    let kriterii = []
+    let M1 = []
+    let Ms = []
+    let res = []
+    let fin_rez = []
+    let turn = 1
+    let alts = 2
+    const STATES = {
+        "1":"just as important as",
+        "2":"just as important (+) as",
+        "3":"slightly more important than",
+        "5":"moderately more important than",
+        "7":"much more important than",
+        "8":"much more important (+) than",
+        "9":"very much more important than"
+    }
+    const STATES2 = {
+        "1":"just as important as",
+        "2":"just as important (+) as",
+        "3":"slightly more important than",
+        "5":"moderately more important than",
+        "7":"much more important than",
+        "8":"much more important (+) than",
+        "9":"very much more important than"
+    }
+    function step_0() {
+        document.getElementById("header").innerHTML = "Experts"
+        let inner = '<div style="position: relative; margin: 5px;"><table id="krits" style="border-collapse: collapse;"></table><button style="position: relative; margin: 5px" onclick="add_exp()">Add Expert</button><br><button id="step_1" style="display: none; position: relative; margin: 5px" onclick="step_1()">Submit</button>'
+        document.getElementById("content").innerHTML = inner
+    }
+    function step_1() {
+        for (let i = 0; i < experts.length; i++) {
+            experts[i].mask = document.getElementById("mask_" + experts[i].name).value
+            experts[i].kval = parseInt(document.getElementById("kval_" + experts[i].name).value)
+        }
+        document.getElementById("header").innerHTML = "Criteria"
+        let inner = '<div style="position: relative; margin: 5px;"><p style="margin: 0">Number of alternatives:</p><input id="alts" type="text" style="width: 30px" value="2"><hr style="border-style: solid;"><table id="krits" style="border-collapse: collapse;"></table><button style="position: relative; margin: 5px" onclick="add_krit()">Add criteria</button><br><button id="step_2" style="display: none; position: relative; margin: 5px" onclick="step_2(`1`)">Submit</button>'
+        document.getElementById("content").innerHTML = inner
+    }
+    function del_krit(krit_id){
+        for(let i = 0; i < kriterii.length; i++){
+            kriterii[i].mask = document.getElementById("mask_" + kriterii[i].name).value
+        }
+        for(let i = 0; i < kriterii.length; i++){
+            if(krit_id == kriterii[i].name){
+                kriterii.splice(i, 1)
+                break;
+            }
+        }
+        let inner = ""
+        inner = '<tr><th>Criteria</th></tr>'
+        for(let i = 0; i < kriterii.length; i++){
+            inner += '<tr><th><input id="mask_' + kriterii[i].name + '" type="text" value="' + kriterii[i].mask + '"></th>'
+            inner += '<th><button id="del_' + kriterii[i].name + '" style="position: relative; margin: 5px" onclick="del_krit(this.id.split(`_`)[1])">-</button></th>'
+        }
+        inner += '</tr>'
+        document.getElementById("krits").innerHTML = inner
+        if(kriterii.length == 0){
+            document.getElementById("krits").innerHTML = ""
+            document.getElementById("step_2").style.display = "none"
+        }
+        else{
+            document.getElementById("step_2").style.display = "block"
+        }
+    }
+    function del_exp(krit_id) {
+        for (let i = 0; i < experts.length; i++) {
+            experts[i].mask = document.getElementById("mask_" + experts[i].name).value
+            experts[i].kval = parseInt(document.getElementById("kval_" + experts[i].name).value)
+        }
+        for (let i = 0; i < experts.length; i++) {
+            if (krit_id == experts[i].name) {
+                experts.splice(i, 1)
+                break;
+            }
+        }
+        let inner = ""
+        inner = '<tr><th>Expert</th><th>Competence</th></tr>'
+        for (let i = 0; i < experts.length; i++) {
+            inner += '<tr><th><input id="mask_' + experts[i].name + '" type="text" value="' + experts[i].mask + '"></th>'
+            inner += '<th><select id="kval_' + experts[i].name + '" value="' + experts[i].kval + '">'
+            for(let j = 1; j <= 10; j++){
+                if(j == experts[i].kval){
+                    inner += '<option selected="true">'+j+'</option>'
+                }
+                else{
+                    inner += '<option>'+j+'</option>'
+                }
+            }
+            inner += '<select></th><th><button id="del_' + experts[i].name + '" style="position: relative; margin: 5px" onclick="del_exp(this.id.split(`_`)[1])">-</button></th>'
+        }
+        inner += '</tr>'
+        document.getElementById("krits").innerHTML = inner
+        if (experts.length == 0) {
+            document.getElementById("krits").innerHTML = ""
+            document.getElementById("step_1").style.display = "none"
+        }
+        else {
+            document.getElementById("step_1").style.display = "block"
+        }
+    }
+    function add_krit(){
+        for(let i = 0; i < kriterii.length; i++){
+            kriterii[i].mask = document.getElementById("mask_" + kriterii[i].name).value
+        }
+        if(kriterii.length > 0){
+            let temp_name = kriterii[kriterii.length-1].name + 1
+            kriterii.push({name:temp_name, mask:("K"+temp_name)})
+        }
+        else{
+            kriterii.push({name:1, mask:"K1"})
+        }
+        let inner = ""
+        inner = '<tr><th>Criteria</th></tr>'
+        for(let i = 0; i < kriterii.length; i++){
+            inner += '<tr><th><input id="mask_' + kriterii[i].name + '" type="text" value="' + kriterii[i].mask + '"></th>'
+            inner += '<th><button id="del_' + kriterii[i].name + '" style="position: relative; margin: 5px" onclick="del_krit(this.id.split(`_`)[1])">-</button></th>'
+        }
+        inner += '</tr>'
+        document.getElementById("krits").innerHTML = inner
+        document.getElementById("step_2").style.display = "block"
+    }
+    function add_exp() {
+        for (let i = 0; i < experts.length; i++) {
+            experts[i].mask = document.getElementById("mask_" + experts[i].name).value
+            experts[i].kval = parseInt(document.getElementById("kval_" + experts[i].name).value)
+        }
+        if (experts.length > 0) {
+            let temp_name = experts[experts.length - 1].name + 1
+            let temp_kval = 1
+            experts.push({ name: temp_name, mask: ("Ex" + temp_name), kval: temp_kval })
+        }
+        else {
+            experts.push({ name: 1, mask: "Ex1", kval: 1 })
+        }
+        let inner = ""
+        inner = '<tr><th>Expert</th><th>Competence</th></tr>'
+        for (let i = 0; i < experts.length; i++) {
+            inner += '<tr><th><input id="mask_' + experts[i].name + '" type="text" value="' + experts[i].mask + '"></th>'
+            inner += '<th><select id="kval_' + experts[i].name + '" value="' + experts[i].kval + '">'
+            for(let j = 1; j <= 10; j++){
+                if(j == experts[i].kval){
+                    inner += '<option selected="true">'+j+'</option>'
+                }
+                else{
+                    inner += '<option>'+j+'</option>'
+                }
+            }
+            inner += '<select></th><th><button id="del_' + experts[i].name + '" style="position: relative; margin: 5px" onclick="del_exp(this.id.split(`_`)[1])">-</button></th>'
+        }
+        inner += '</tr>'
+        document.getElementById("krits").innerHTML = inner
+        document.getElementById("step_1").style.display = "block"
+    }
+    function check_M1(){
+        M1[0] = []
+        M1[1] = []
+        M1[2] = 0
+        M1[3] = []
+        for(let i = 0; i < kriterii.length; i++){
+            M1[0][i] = []
+            M1[1][i] = 1
+            for(let j = 0; j < kriterii.length; j++){
+                if(document.getElementById(i + "_" + j).value.includes("/")){
+                    M1[0][i][j] = 1 / parseFloat(document.getElementById(i + "_" + j).value.split("/")[1])
+                }
+                else{
+                    M1[0][i][j] = parseFloat(document.getElementById(i + "_" + j).value)
+                }
+                M1[1][i] *= M1[0][i][j]
+            }
+            M1[1][i] = Math.pow(M1[1][i], 1/kriterii.length)
+            M1[2] += M1[1][i]
+
+        }
+        for(let i = 0; i < kriterii.length; i++){
+            M1[3][i] = M1[1][i] / M1[2]
+        }
+        step_3()
+    }
+    function mirror(this_id, opt){
+        let this_val = document.getElementById(this_id).options[document.getElementById(this_id).selectedIndex].text
+        let mirrored
+        let state
+        let this_min = 0
+        let this_max = 0
+        let comp = ""
+        if(opt == "0"){
+            this_min = Math.min(this_id.split("_")[1], this_id.split("_")[0])
+            this_max = Math.max(this_id.split("_")[1], this_id.split("_")[0])
+            mirrored = document.getElementById(this_id.split("_")[1]+"_"+this_id.split("_")[0])
+            state = document.getElementById("s_"+this_min+"_"+this_max)
+        }
+        else{
+            this_min = Math.min(this_id.split("_")[2], this_id.split("_")[1])
+            this_max = Math.max(this_id.split("_")[2], this_id.split("_")[1])
+            mirrored = document.getElementById(this_id.split("_")[0]+"_"+this_id.split("_")[2]+"_"+this_id.split("_")[1])
+            state = document.getElementById(this_id.split("_")[0]+"s_"+this_min+"_"+this_max)
+        }
+        if(this_val == "1"){
+            comp = this_id
+            document.getElementById(this_id).style.backgroundColor = "yellow"
+            mirrored.style.backgroundColor = "yellow"
+            for(let i = 0; i < mirrored.options.length; i++){
+                if(mirrored.options[i].text == "1"){
+                    mirrored.options[i].selected = true
+                    break
+                }
+            }
+        }
+        else if(!this_val.includes("/")){
+            comp = this_id
+            document.getElementById(this_id).style.backgroundColor = "lightgreen"
+            mirrored.style.backgroundColor = "tomato"
+            for(let i = 0; i < mirrored.options.length; i++){
+                if(mirrored.options[i].text == "1/"+this_val){
+                    mirrored.options[i].selected = true
+                    break
+                }
+            }
+        }
+        else{
+            comp = mirrored.id
+            document.getElementById(this_id).style.backgroundColor = "tomato"
+            mirrored.style.backgroundColor = "lightgreen"
+            for(let i = 0; i < mirrored.options.length; i++){
+                if(mirrored.options[i].text == this_val.replace("1/", "")){
+                    mirrored.options[i].selected = true
+                    break
+                }
+            }
+        }
+        if(opt == "0"){
+            state.innerHTML = '- Criteria "' + kriterii[comp.split("_")[0]].mask + '" <b>' + STATES[document.getElementById(comp).value] + '</b> "' + kriterii[comp.split("_")[1]].mask + '"'
+        }
+        else{
+            state.innerHTML = '- Alternative "A'+ (parseInt(comp.split("_")[1])+1) + '" <b>' + STATES2[document.getElementById(comp).value] + '</b> "A' + (parseInt(comp.split("_")[2])+1) + '"'
+        }
+    }
+    function step_2(fr) {
+        if (fr == '1') {
+            if (isNaN(document.getElementById("alts").value)) {
+                alert("Incorrect number of alternatives!")
+                return false
+            }
+            else if (document.getElementById("alts").value < 2) {
+                alert("Incorrect number of alternatives!")
+                return false
+            }
+            alts = parseInt(document.getElementById("alts").value)
+            for (let i = 0; i < kriterii.length; i++) {
+                kriterii[i].mask = document.getElementById("mask_" + kriterii[i].name).value
+            }
+        }
+        document.getElementById("header").innerHTML = "Comparison of criteria (" + experts[turn-1].mask + ")"
+        document.getElementById("content").innerHTML = '<div style="position: relative; margin: 5px;"><table id="krits" style="border-collapse: collapse;"></table></div>'
+        let inner = '<tr><th>Criteria</th>'
+        for(let i = 0; i < kriterii.length; i++){
+            inner += '<th>' + kriterii[i].name + '</th>'
+        }
+        for(let i = 0; i < kriterii.length; i++){
+            inner += '<tr><th style="text-align:left">' + kriterii[i].name + ' - ' + kriterii[i].mask + '</th>'
+            for(let j = 0; j < kriterii.length; j++){
+                if(i == j){
+                    inner += '<th><input id="' + i + '_' + j + '" type="text" style="width: 54px; border-style:solid; border-width:1px; text-align:center; background-color:lightgrey" value="1" readonly></th>'
+                }
+                else{
+                    inner += '<th><select id="' + i + '_' + j + '" style="width: 60px; text-align:center; background-color:yellow" onchange="mirror(this.id, 0)">'
+                    inner += '<option style="background-color:white" selected="true">1</option>'
+                    inner += '<option style="background-color:white">2</option>'
+                    inner += '<option style="background-color:white">3</option>'
+                    inner += '<option style="background-color:white">5</option>'
+                    inner += '<option style="background-color:white">7</option>'
+                    inner += '<option style="background-color:white">8</option>'
+                    inner += '<option style="background-color:white">9</option>'
+                    inner += '<option style="background-color:white">1/2</option>'
+                    inner += '<option style="background-color:white">1/3</option>'
+                    inner += '<option style="background-color:white">1/5</option>'
+                    inner += '<option style="background-color:white">1/7</option>'
+                    inner += '<option style="background-color:white">1/8</option>'
+                    inner += '<option style="background-color:white">1/9</option>'
+                    inner += '</select></th>'
+                }
+            }
+            inner += '</tr>'
+        }
+        document.getElementById("krits").innerHTML = inner
+        inner = ""
+        for(let i = 0; i < kriterii.length; i++){
+            for(let j = i + 1; j < kriterii.length; j++){
+                inner += '<p id="s_'+i+'_'+j+'">- Criteria "'+ kriterii[i].mask +'"<b> just as important as</b> "' + kriterii[j].mask + '"</p>'
+            }
+        }
+        inner += '<button id="step_3" style="position: relative; margin: 5px" onclick="check_M1()">Submit</button>'
+        document.getElementById("content").innerHTML += inner
+    }
+    function check_Ms() {
+        for (let i = 0; i < kriterii.length; i++) {
+            Ms[i] = []
+            Ms[i][0] = []
+            Ms[i][1] = []
+            Ms[i][2] = 0
+            Ms[i][3] = []
+            for (let j = 0; j < alts; j++) {
+                Ms[i][0][j] = []
+                Ms[i][1][j] = 1
+                for (let k = 0; k < alts; k++) {
+                    if (document.getElementById(i + "_" + j + "_" + k).value.includes("/")) {
+                        Ms[i][0][j][k] = 1 / parseFloat(document.getElementById(i + "_" + j + "_" + k).value.split("/")[1])
+                    }
+                    else {
+                        Ms[i][0][j][k] = parseFloat(document.getElementById(i + "_" + j + "_" + k).value)
+                    }
+                    Ms[i][1][j] *= Ms[i][0][j][k]
+                }
+                Ms[i][1][j] = Math.pow(Ms[i][1][j], 1 / alts)
+                Ms[i][2] += Ms[i][1][j]
+
+            }
+            for (let j = 0; j < alts; j++) {
+                Ms[i][3][j] = Ms[i][1][j] / Ms[i][2]
+            }
+        }
+        for (let i = 0; i < alts; i++) {
+            res[i] = {}
+            res[i].name = "A" + i
+            res[i].value = 0
+            for (let j = 0; j < kriterii.length; j++) {
+                res[i].value += M1[3][j]*Ms[j][3][i]
+            }
+        }
+        for (let i = 0; i < alts; i++) {
+            for (let j = i; j < alts; j++) {
+                if (res[j].value > res[i].value) {
+                    let temp = {}
+                    temp.name = res[j].name
+                    temp.value = res[j].value
+                    res[j].name = res[i].name
+                    res[j].value = res[i].value
+                    res[i].name = temp.name
+                    res[i].value = temp.value
+                }
+            }
+        }
+        fin_rez.push([])
+        for (let i = 0; i < alts; i++) {
+            fin_rez[fin_rez.length - 1].push({ name: res[i].name, value: res[i].value })
+        }
+        step_4()
+    }
+    function step_3(){
+        document.getElementById("header").innerHTML = "Comparison of alternatives (" + experts[turn-1].mask + ")"
+        inner = '<div style="position: relative; margin: 5px;">'
+        for(let i = 0; i < kriterii.length; i++){
+            inner += '<table id="' + i + '" style="border-collapse: collapse; margin: 5px"><tr>'
+            inner += '<th>According to ' + kriterii[i].mask +'</th>'
+            for(let j = 1; j <= alts; j++){
+                inner += '<th>A' + j + '</th>'
+            }
+            inner += '</tr>'
+            for (let j = 0; j < alts; j++) {
+                inner += '<tr><th>A' + (j + 1) + '</th>'
+                for (let k = 0; k < alts; k++) {
+                    if (j == k){
+                        inner += '<th><input id="' + i + '_' + j + '_' + k + '" type="text" style="width: 54px; border-style:solid; border-width:1px; text-align:center; background-color:lightgrey" value="1" readonly></th>'
+                    }
+                    else{
+                        inner += '<th><select id="' + i + '_' + j + '_' + k + '" style="width: 60px; text-align:center; background-color:yellow" onchange="mirror(this.id, 1)">'
+                        inner += '<option style="background-color:white" selected="true">1</option>'
+                        inner += '<option style="background-color:white">2</option>'
+                        inner += '<option style="background-color:white">3</option>'
+                        inner += '<option style="background-color:white">5</option>'
+                        inner += '<option style="background-color:white">7</option>'
+                        inner += '<option style="background-color:white">8</option>'
+                        inner += '<option style="background-color:white">9</option>'
+                        inner += '<option style="background-color:white">1/2</option>'
+                        inner += '<option style="background-color:white">1/3</option>'
+                        inner += '<option style="background-color:white">1/5</option>'
+                        inner += '<option style="background-color:white">1/7</option>'
+                        inner += '<option style="background-color:white">1/8</option>'
+                        inner += '<option style="background-color:white">1/9</option>'
+                        inner += '</select></th>'
+                    }
+                }
+                inner += '</tr>'
+            }
+            inner += '</table>'
+            for(let j = 0; j < alts; j++){
+                for(let k = j + 1; k < alts; k++){
+                    inner += '<p id="'+i+'s_'+j+'_'+k+'">- Alternative "A'+ (j+1) +'"<b> just as important as</b> "A' + (k+1) + '"</p>'
+                }
+            }
+        }
+        inner += '<button id="check_Ms" style="position: relative; margin: 5px" onclick="check_Ms()">Submit</button></div>'
+        document.getElementById("content").innerHTML = inner
+    }
+    function step_4() {
+        document.getElementById("header").innerHTML = "Results (" + experts[turn-1].mask + ")"
+        inner = '<div style="position: relative; margin: 5px;">'
+        for (let i = 0; i < alts; i++) {
+            if (i == 0) {
+                inner += '<p style="margin: 5px">A' + (parseInt(res[i].name.split("A")[1]) + 1) + ': ' + res[i].value.toFixed(5) + ' - is the best alternative</p>'
+            }
+            else {
+                inner += '<p style="margin: 5px">A' + (parseInt(res[i].name.split("A")[1]) + 1) + ': ' + res[i].value.toFixed(5) + '</p>'
+            }
+        }
+        if (turn < experts.length) {
+            turn++
+            let M1 = []
+            let Ms = []
+            let res = []
+            inner += '<button id="cont" style="position: relative; margin: 5px" onclick="step_2(false)">Next expert</button></div>'
+        }
+        else {
+            inner += '<button id="cont" style="position: relative; margin: 5px" onclick="step_5()">Results</button></div>'
+        }
+        inner += '</div>'
+        document.getElementById("content").innerHTML = inner
+    }
+    function step_5() {
+        for (let i = 0; i < alts; i++) {
+            res[i].value = 0
+            for (let j = 0; j < experts.length; j++) {
+                for (let k = 0; k < alts; k++) {
+                    if (fin_rez[j][k].name == res[i].name) {
+                        res[i].value += fin_rez[j][k].value * parseInt(experts[j].kval)
+                        break
+                    }
+                }
+            }
+        }
+        for (let i = 0; i < res.length; i++) {
+            for (let j = i; j < res.length; j++) {
+                if (res[j].value > res[i].value) {
+                    let temp = {}
+                    temp.name = res[j].name
+                    temp.value = res[j].value
+                    res[j].name = res[i].name
+                    res[j].value = res[i].value
+                    res[i].name = temp.name
+                    res[i].value = temp.value
+                }
+            }
+        }
+        document.getElementById("header").innerHTML = "Total Results"
+        inner = '<div style="position: relative; margin: 5px;">'
+        for (let i = 0; i < alts; i++) {
+            if (i == 0)
+                inner += '<p style="margin: 5px"><b>A' + (parseInt(res[i].name.split("A")[1]) + 1) + ': ' + res[i].value.toFixed(5) + ' - is the best alternative</b></p>'
+            else
+                inner += '<p style="margin: 5px">A' + (parseInt(res[i].name.split("A")[1]) + 1) + ': ' + res[i].value.toFixed(5) + '</p>'
+        }
+        inner += '</div>'
+        document.getElementById("content").innerHTML = inner
+    }
+    step_0()
+</script>
