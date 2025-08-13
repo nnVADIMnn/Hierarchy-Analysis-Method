@@ -1,7 +1,7 @@
 # Hierarchy-Analysis-Method
 Selecting the best alternative based on multiple criteria
 # How to use
-1. Make a list of experts and their competencies:
+1. Make a list of experts and their competencies
 <img width="511" height="409" alt="изображение" src="https://github.com/user-attachments/assets/bb2ea6d3-9c0e-45d9-8a31-83f29b3ee38e" />
 
 2. Select the number of alternatives and add criteria
